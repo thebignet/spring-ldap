@@ -1,5 +1,5 @@
 /*
- * Copyright 2005-2008 the original author or authors.
+ * Copyright 2005-2010 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,6 +28,7 @@ import javax.naming.spi.DirObjectFactory;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.core.JdkVersion;
 import org.springframework.ldap.core.DirContextAdapter;
 import org.springframework.ldap.core.DistinguishedName;
 import org.springframework.ldap.support.LdapUtils;
@@ -40,7 +41,7 @@ import org.springframework.util.StringUtils;
  * @author Mattias Hellborg Arthursson
  */
 public class DefaultDirObjectFactory implements DirObjectFactory {
-	private static final Log log = LogFactory.getLog(AbstractContextSource.class);
+	private static final Log log = LogFactory.getLog(DefaultDirObjectFactory.class);
 
 	/**
 	 * Key to use in the ContextSource implementation to store the value of the
@@ -153,8 +154,17 @@ public class DefaultDirObjectFactory implements DirObjectFactory {
 				nameString = pathString;
 			}
 			catch (URISyntaxException e) {
-				throw new IllegalArgumentException("Supplied name starts with protocol prefix indicating a referral,"
-						+ " but is not possible to parse to an URI", e);
+				if (JdkVersion.isAtLeastJava15()) {
+					throw new IllegalArgumentException(
+							"Supplied name starts with protocol prefix indicating a referral,"
+									+ " but is not possible to parse to an URI",
+							e);
+				} else {
+					throw new IllegalArgumentException(
+							"Supplied name starts with protocol prefix indicating a referral,"
+									+ " but is not possible to parse to an URI: " +
+							e.getMessage());
+				}
 			}
 			if (log.isDebugEnabled()) {
 				log.debug("Resulting name after removal of referral information: '" + nameString + "'");

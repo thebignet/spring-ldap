@@ -1,5 +1,5 @@
 /*
- * Copyright 2005-2008 the original author or authors.
+ * Copyright 2005-2010 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -87,16 +87,18 @@ public abstract class CompareFilter extends AbstractFilter {
 	 * @see org.springframework.ldap.filter.Filter#equals(java.lang.Object)
 	 */
 	public boolean equals(Object o) {
-		if (o instanceof CompareFilter && o.getClass() == this.getClass()) {
-			CompareFilter that = (CompareFilter) o;
-			EqualsBuilder builder = new EqualsBuilder();
-			builder.append(this.attribute, that.attribute);
-			builder.append(this.value, that.value);
-			return builder.isEquals();
-		}
-		else {
+		if (o == null) {
 			return false;
 		}
+		if (o == this) {
+			return true;
+		}
+		if (o.getClass() != getClass()) {
+			return false;
+		}
+		CompareFilter f = (CompareFilter) o;
+		EqualsBuilder builder = new EqualsBuilder();
+		return builder.append(this.attribute, f.attribute).append(this.value, f.value).isEquals();
 	}
 
 	/**

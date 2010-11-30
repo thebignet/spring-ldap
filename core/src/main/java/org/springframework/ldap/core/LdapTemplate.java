@@ -1,5 +1,5 @@
 /*
- * Copyright 2005-2008 the original author or authors.
+ * Copyright 2005-2010 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -1383,7 +1383,9 @@ public class LdapTemplate implements LdapOperations, InitializingBean {
 	 * .Name, java.lang.String, java.lang.String)
 	 */
 	public boolean authenticate(Name base, String filter, String password) {
-		return authenticate(base, filter, password, new NullAuthenticatedLdapEntryContextCallback());
+		return authenticate(base, filter, password,
+				new NullAuthenticatedLdapEntryContextCallback(),
+				new NullAuthenticationErrorCallback());
 	}
 
 	/*
@@ -1394,7 +1396,9 @@ public class LdapTemplate implements LdapOperations, InitializingBean {
 	 * , java.lang.String, java.lang.String)
 	 */
 	public boolean authenticate(String base, String filter, String password) {
-		return authenticate(base, filter, password, new NullAuthenticatedLdapEntryContextCallback());
+		return authenticate(new DistinguishedName(base), filter, password,
+				new NullAuthenticatedLdapEntryContextCallback(),
+				new NullAuthenticationErrorCallback());
 	}
 
 	/*
@@ -1407,7 +1411,7 @@ public class LdapTemplate implements LdapOperations, InitializingBean {
 	 */
 	public boolean authenticate(String base, String filter, String password,
 			AuthenticatedLdapEntryContextCallback callback) {
-		return authenticate(new DistinguishedName(base), filter, password, callback);
+		return authenticate(new DistinguishedName(base), filter, password, callback, new NullAuthenticationErrorCallback());
 	}
 
 	/*
@@ -1420,12 +1424,69 @@ public class LdapTemplate implements LdapOperations, InitializingBean {
 	 */
 	public boolean authenticate(Name base, String filter, String password,
 			final AuthenticatedLdapEntryContextCallback callback) {
+		return authenticate(base, filter, password, callback, new NullAuthenticationErrorCallback());
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * org.springframework.ldap.core.LdapOperations#authenticate(java.lang.String
+	 * , java.lang.String, java.lang.String,
+	 * org.springframework.ldap.core.AuthenticationErrorCallback)
+	 */
+	public boolean authenticate(String base, String filter, String password,
+			AuthenticationErrorCallback errorCallback) {
+		return authenticate(new DistinguishedName(base), filter, password, new NullAuthenticatedLdapEntryContextCallback(), errorCallback);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * org.springframework.ldap.core.LdapOperations#authenticate(javax.naming
+	 * .Name, java.lang.String, java.lang.String,
+	 * org.springframework.ldap.core.AuthenticationErrorCallback)
+	 */
+	public boolean authenticate(Name base, String filter, String password,
+			final AuthenticationErrorCallback errorCallback) {
+		return authenticate(base, filter, password, new NullAuthenticatedLdapEntryContextCallback(), errorCallback);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * org.springframework.ldap.core.LdapOperations#authenticate(java.lang.String
+	 * , java.lang.String, java.lang.String,
+	 * org.springframework.ldap.core.AuthenticatedLdapEntryContextCallback,
+	 * org.springframework.ldap.core.AuthenticationErrorCallback)
+	 */
+	public boolean authenticate(String base, String filter, String password,
+			final AuthenticatedLdapEntryContextCallback callback, final AuthenticationErrorCallback errorCallback) {
+		return authenticate(new DistinguishedName(base), filter, password, callback, errorCallback);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * org.springframework.ldap.core.LdapOperations#authenticate(javax.naming
+	 * .Name, java.lang.String, java.lang.String,
+	 * org.springframework.ldap.core.AuthenticatedLdapEntryContextCallback,
+	 * org.springframework.ldap.core.AuthenticationErrorCallback)
+	 */
+	public boolean authenticate(Name base, String filter, String password,
+			final AuthenticatedLdapEntryContextCallback callback, final AuthenticationErrorCallback errorCallback) {
 
 		List result = search(base, filter, new LdapEntryIdentificationContextMapper());
-		if (result.size() != 1) {
-			log.error("Unable to find unique entry matching in authentication; base: '" + base + "'; filter: '"
-					+ filter + "'. Found " + result.size() + " matching entries");
+		if (result.size() == 0) {
+			String msg = "No results found for search, base: '" + base + "'; filter: '" + filter + "'.";
+			log.info(msg);
 			return false;
+		} else if (result.size() > 1) {
+			String msg = "base: '" + base + "'; filter: '" + filter + "'.";
+			throw new IncorrectResultSizeDataAccessException(msg, 1, result.size());
 		}
 
 		final LdapEntryIdentification entryIdentification = (LdapEntryIdentification) result.get(0);
@@ -1441,7 +1502,8 @@ public class LdapTemplate implements LdapOperations, InitializingBean {
 			return true;
 		}
 		catch (Exception e) {
-			log.error("Authentication failed for entry with DN '" + entryIdentification.getAbsoluteDn() + "'", e);
+			log.info("Authentication failed for entry with DN '" + entryIdentification.getAbsoluteDn() + "'", e);
+			errorCallback.execute(e);
 			return false;
 		}
 	}
@@ -1476,9 +1538,17 @@ public class LdapTemplate implements LdapOperations, InitializingBean {
 		return searchForObject(new DistinguishedName(base), filter, mapper);
 	}
 
-	private static final class NullAuthenticatedLdapEntryContextCallback implements
-			AuthenticatedLdapEntryContextCallback {
-		public void executeWithContext(DirContext ctx, LdapEntryIdentification ldapEntryIdentification) {
+	private static final class NullAuthenticatedLdapEntryContextCallback
+			implements AuthenticatedLdapEntryContextCallback {
+		public void executeWithContext(DirContext ctx,
+				LdapEntryIdentification ldapEntryIdentification) {
+			// Do nothing
+		}
+	}
+
+	private static final class NullAuthenticationErrorCallback
+			implements AuthenticationErrorCallback {
+		public void execute(Exception e) {
 			// Do nothing
 		}
 	}

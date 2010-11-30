@@ -1,5 +1,5 @@
 /*
- * Copyright 2005-2008 the original author or authors.
+ * Copyright 2005-2010 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,9 @@
  */
 
 package org.springframework.ldap.itest;
+
+import org.apache.commons.lang.builder.ToStringBuilder;
+import org.apache.commons.lang.builder.ToStringStyle;
 
 /**
  * Dummy bean to be used in the LdapTemplate integration tests.
@@ -60,5 +63,10 @@ public class Person {
 
     public void setPhone(String phone) {
         this.phone = phone;
+    }
+    
+    @Override
+    public String toString() {
+    	return ToStringBuilder.reflectionToString(this, ToStringStyle.SHORT_PREFIX_STYLE);
     }
 }

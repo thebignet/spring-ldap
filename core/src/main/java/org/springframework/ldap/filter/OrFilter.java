@@ -1,5 +1,5 @@
 /*
- * Copyright 2005-2008 the original author or authors.
+ * Copyright 2005-2010 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,10 +20,10 @@ package org.springframework.ldap.filter;
  * Filter for logical OR.
  * 
  * <pre>
- *        AndFilter filter = new AndFilter();
- *        filter.or(new EqualsFilter(&quot;objectclass&quot;, &quot;person&quot;);
- *        filter.or(new EqualsFilter(&quot;objectclass&quot;, &quot;organizationalUnit&quot;);
- *        System.out.println(filter.encode());    
+ * OrFilter filter = new OrFilter();
+ * filter.or(new EqualsFilter(&quot;objectclass&quot;, &quot;person&quot;);
+ * filter.or(new EqualsFilter(&quot;objectclass&quot;, &quot;organizationalUnit&quot;);
+ * System.out.println(filter.encode());    
  * </pre>
  * 
  * would result in:

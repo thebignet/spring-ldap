@@ -1,5 +1,5 @@
 /*
- * Copyright 2005-2008 the original author or authors.
+ * Copyright 2005-2010 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@ import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.fail;
 
 import java.io.Serializable;
+import java.util.Date;
 import java.util.LinkedList;
 
 import javax.naming.directory.DirContext;
@@ -43,12 +44,24 @@ public class LdapTemplateObjectBindIntegrationTest extends AbstractLdapTemplateI
 	private LdapTemplate tested;
 
 	@Test
-	public void testBindJavaObject() throws Exception {
+	public void testBindJavaObjectDate() throws Exception {
+		String dn = "cn=myRandomDate";
+		Date now = new Date();
+		tested.bind(dn, now, null);
+
+		Date result = (Date) tested.lookup(dn);
+		assertEquals(now, result);
+		tested.unbind(dn);
+	}
+
+	@Test
+	public void testBindJavaObjectInteger() throws Exception {
 		String dn = "cn=myRandomInt";
-		tested.bind(dn, new Integer(54321), null);
+		int i = 54321;
+		tested.bind(dn, new Integer(i), null);
 
 		Integer result = (Integer) tested.lookup(dn);
-		assertEquals(54321, result.intValue());
+		assertEquals(i, result.intValue());
 		tested.unbind(dn);
 	}
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2005-2008 the original author or authors.
+ * Copyright 2005-2010 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,8 @@
 package org.springframework.ldap.filter;
 
 import org.springframework.ldap.filter.LessThanOrEqualsFilter;
+
+import com.gargoylesoftware.base.testing.EqualsTester;
 
 import junit.framework.TestCase;
 
@@ -57,4 +59,16 @@ public class LessThanOrEqualsFilterTest extends TestCase {
 
     }
 
+    public void testEquals() {
+    	String attribute = "a";
+		String value = "b";
+		LessThanOrEqualsFilter originalObject = new LessThanOrEqualsFilter(attribute, value);
+		LessThanOrEqualsFilter identicalObject = new LessThanOrEqualsFilter(attribute, value);
+		LessThanOrEqualsFilter differentObject = new LessThanOrEqualsFilter(attribute, "c");
+		LessThanOrEqualsFilter subclassObject = new LessThanOrEqualsFilter(attribute, value) {
+		};
+
+        new EqualsTester(originalObject, identicalObject, differentObject,
+                subclassObject);
+    }
 }

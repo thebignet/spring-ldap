@@ -1,5 +1,5 @@
 /*
- * Copyright 2005-2008 the original author or authors.
+ * Copyright 2005-2010 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -138,7 +138,7 @@ public class DistinguishedNameTest extends TestCase {
 
 		assertEquals("Append failed", "ou=foo,ou=bar,cn=fie,ou=baz", path1.toString());
 	}
-
+	
 	public void testEquals() throws Exception {
 
 		// original object
@@ -554,6 +554,20 @@ public class DistinguishedNameTest extends TestCase {
 		assertNotNull(name);
 	}
 
+	/**
+	 * Test for http://forum.springsource.org/showthread.php?t=86640.
+	 */
+	public void testDistinguishedNameWithDotParsesProperly() {
+		DistinguishedName name = new DistinguishedName("cn=first.last,OU=DevTest Users,DC=xyz,DC=com");
+		assertEquals("cn=first.last,ou=DevTest Users,dc=xyz,dc=com", name.toCompactString());
+		DistinguishedName dn = new DistinguishedName();
+		dn.parse("cn=first.last,OU=DevTest Users,DC=xyz,DC=com");
+		assertEquals("first.last", dn.getValue("cn"));
+		assertEquals("DevTest Users", dn.getValue("ou"));
+		assertEquals("xyz", dn.getLdapRdn(1).getValue());
+		assertEquals("com", dn.getLdapRdn(0).getValue());
+	}
+
 	public void testToStringCompact() {
 		try {
 			DistinguishedName name = new DistinguishedName("cn=john doe, ou=company");
@@ -565,6 +579,82 @@ public class DistinguishedNameTest extends TestCase {
 		finally {
 			// Always restore the system setting
 			System.setProperty(DistinguishedName.SPACED_DN_FORMAT_PROPERTY, "");
+		}
+	}
+
+	public void testKeyCaseFoldNoneShouldEqualOriginalCasedKeys() throws Exception {
+		try {
+			String dnString = "ou=foo,Ou=bar,oU=baz,OU=bim";
+			DistinguishedName name = new DistinguishedName(dnString);
+			
+			// First check the default
+			assertEquals("ou=foo,ou=bar,ou=baz,ou=bim", name.toString());
+
+			System.setProperty(DistinguishedName.KEY_CASE_FOLD_PROPERTY, DistinguishedName.KEY_CASE_FOLD_NONE);
+			name = new DistinguishedName(dnString);
+			System.out.println(dnString + " folded as \"" + DistinguishedName.KEY_CASE_FOLD_NONE + "\": " + name);
+			assertEquals(dnString, name.toString());
+		}
+		finally {
+			// Always restore the system setting
+			System.clearProperty(DistinguishedName.KEY_CASE_FOLD_PROPERTY);
+		}
+	}
+
+	public void testKeyCaseFoldUpperShouldEqualUpperCasedKeys() throws Exception {
+		try {
+			String dnString = "ou=foo,Ou=bar,oU=baz,OU=bim";
+			DistinguishedName name = new DistinguishedName(dnString);
+
+			// First check the default
+			assertEquals("ou=foo,ou=bar,ou=baz,ou=bim", name.toString());
+			
+			System.setProperty(DistinguishedName.KEY_CASE_FOLD_PROPERTY, DistinguishedName.KEY_CASE_FOLD_UPPER);
+			name = new DistinguishedName(dnString);
+			System.out.println(dnString + " folded as \"" + DistinguishedName.KEY_CASE_FOLD_UPPER + "\": " + name);
+			assertEquals("OU=foo,OU=bar,OU=baz,OU=bim", name.toString());
+		}
+		finally {
+			// Always restore the system setting
+			System.clearProperty(DistinguishedName.KEY_CASE_FOLD_PROPERTY);
+		}
+	}
+
+	public void testKeyCaseFoldLowerShouldEqualLowerCasedKeys() throws Exception {
+		try {
+			String dnString = "ou=foo,Ou=bar,oU=baz,OU=bim";
+			DistinguishedName name = new DistinguishedName(dnString);
+
+			// First check the default
+			assertEquals("ou=foo,ou=bar,ou=baz,ou=bim", name.toString());
+			
+			System.setProperty(DistinguishedName.KEY_CASE_FOLD_PROPERTY, DistinguishedName.KEY_CASE_FOLD_LOWER);
+			name = new DistinguishedName(dnString);
+			System.out.println(dnString + " folded as \"" + DistinguishedName.KEY_CASE_FOLD_LOWER + "\": " + name);
+			assertEquals("ou=foo,ou=bar,ou=baz,ou=bim", name.toString());
+		}
+		finally {
+			// Always restore the system setting
+			System.clearProperty(DistinguishedName.KEY_CASE_FOLD_PROPERTY);
+		}
+	}
+
+	public void testKeyCaseFoldNonsenseShoulddefaultToLowerCasedKeysAndLogWarning() throws Exception {
+		try {
+			String dnString = "ou=foo,Ou=bar,oU=baz,OU=bim";
+			DistinguishedName name = new DistinguishedName(dnString);
+
+			// First check the default
+			assertEquals("ou=foo,ou=bar,ou=baz,ou=bim", name.toString());
+			
+			System.setProperty(DistinguishedName.KEY_CASE_FOLD_PROPERTY, "whatever");
+			name = new DistinguishedName(dnString);
+			System.out.println(dnString + " folded as \"whatever\": " + name);
+			assertEquals("ou=foo,ou=bar,ou=baz,ou=bim", name.toString());
+		}
+		finally {
+			// Always restore the system setting
+			System.clearProperty(DistinguishedName.KEY_CASE_FOLD_PROPERTY);
 		}
 	}
 }

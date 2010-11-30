@@ -1,5 +1,5 @@
 /*
- * Copyright 2005-2008 the original author or authors.
+ * Copyright 2005-2010 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,11 +20,18 @@ import junit.framework.TestCase;
 import org.springframework.ldap.filter.AndFilter;
 import org.springframework.ldap.filter.NotFilter;
 
+import com.gargoylesoftware.base.testing.EqualsTester;
+
+/**
+ * Unit tests for the NotPresentFilter class.
+ *
+ * @author Ulrik Sandberg
+ */
 public class NotPresentFilterTest extends TestCase {
 
 	public void testNotPresentFilter() {
-		NotPresentFilter presentFilter = new NotPresentFilter("foo");
-		assertEquals("(!(foo=*))", presentFilter.encode());
+		NotPresentFilter filter = new NotPresentFilter("foo");
+		assertEquals("(!(foo=*))", filter.encode());
 
 		NotFilter notFilter = new NotFilter(new NotPresentFilter("foo"));
 		assertEquals("(!(!(foo=*)))", notFilter.encode());
@@ -39,4 +46,16 @@ public class NotPresentFilterTest extends TestCase {
 		andFilter.and(new NotFilter(new NotPresentFilter("bar")));
 		assertEquals("(&(!(foo=*))(!(!(bar=*))))", andFilter.encode());
 	}
+
+    public void testEquals() {
+		String attribute = "foo";
+		NotPresentFilter originalObject = new NotPresentFilter(attribute);
+		NotPresentFilter identicalObject = new NotPresentFilter(attribute);
+		NotPresentFilter differentObject = new NotPresentFilter("bar");
+		NotPresentFilter subclassObject = new NotPresentFilter(attribute) {
+        };
+
+        new EqualsTester(originalObject, identicalObject, differentObject,
+                subclassObject);
+    }
 }

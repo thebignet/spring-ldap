@@ -1,5 +1,5 @@
 /*
- * Copyright 2005-2008 the original author or authors.
+ * Copyright 2005-2010 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,11 +20,18 @@ import junit.framework.TestCase;
 import org.springframework.ldap.filter.AndFilter;
 import org.springframework.ldap.filter.NotFilter;
 
+import com.gargoylesoftware.base.testing.EqualsTester;
+
+/**
+ * Unit tests for the PresentFilter class.
+ *
+ * @author Ulrik Sandberg
+ */
 public class PresentFilterTest extends TestCase {
 
 	public void testPresentFilter() {
-		PresentFilter presentFilter = new PresentFilter("foo");
-		assertEquals("(foo=*)", presentFilter.encode());
+		PresentFilter filter = new PresentFilter("foo");
+		assertEquals("(foo=*)", filter.encode());
 
 		NotFilter notFilter = new NotFilter(new PresentFilter("foo"));
 		assertEquals("(!(foo=*))", notFilter.encode());
@@ -39,4 +46,16 @@ public class PresentFilterTest extends TestCase {
 		andFilter.and(new NotFilter(new PresentFilter("bar")));
 		assertEquals("(&(foo=*)(!(bar=*)))", andFilter.encode());
 	}
+
+    public void testEquals() {
+		String attribute = "foo";
+		PresentFilter originalObject = new PresentFilter(attribute);
+		PresentFilter identicalObject = new PresentFilter(attribute);
+		PresentFilter differentObject = new PresentFilter("bar");
+		PresentFilter subclassObject = new PresentFilter(attribute) {
+        };
+
+        new EqualsTester(originalObject, identicalObject, differentObject,
+                subclassObject);
+    }
 }

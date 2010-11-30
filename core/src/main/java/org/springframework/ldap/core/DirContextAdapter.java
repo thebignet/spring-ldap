@@ -1,5 +1,5 @@
 /*
- * Copyright 2005-2008 the original author or authors.
+ * Copyright 2005-2010 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -60,6 +60,10 @@ import org.springframework.util.StringUtils;
  * available as an array of <code>ModificationItem</code> objects, suitable as
  * input to {@link LdapTemplate#modifyAttributes(DirContextOperations)}.
  * 
+ * Note that this is not a complete implementation of DirContext. Several
+ * methods are not relevant for the intended usage of this class, so they
+ * throw UnsupportOperationException.
+ *
  * @see #setAttributeValue(String, Object)
  * @see #setAttributeValues(String, Object[])
  * @see #getStringAttribute(String)
@@ -552,13 +556,12 @@ public class DirContextAdapter implements DirContextOperations {
 	}
 
 	/*
-	 * @see
-	 * org.springframework.ldap.support.DirContextOperations#getObjectAttribute
+	 * @see org.springframework.ldap.support.DirContextOperations#getObjectAttribute
 	 * (java.lang.String)
 	 */
 	public Object getObjectAttribute(String name) {
 		Attribute oneAttr = originalAttrs.get(name);
-		if (oneAttr == null) {
+		if (oneAttr == null || oneAttr.size() == 0) { // LDAP-215
 			return null;
 		}
 		try {
@@ -569,6 +572,19 @@ public class DirContextAdapter implements DirContextOperations {
 		}
 	}
 
+	// LDAP-215
+	/* (non-Javadoc)
+	 * @see org.springframework.ldap.core.DirContextOperations#attributeExists(java.lang.String)
+	 */
+	public boolean attributeExists(String name) {
+		Attribute oneAttr = originalAttrs.get(name);
+		if (oneAttr == null) {
+			return false;
+		} else {
+			return true;
+		}
+	}
+	
 	/*
 	 * @see
 	 * org.springframework.ldap.support.DirContextOperations#setAttributeValue

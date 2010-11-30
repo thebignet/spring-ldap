@@ -1,5 +1,5 @@
 /*
- * Copyright 2005-2008 the original author or authors.
+ * Copyright 2005-2010 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@
 package org.springframework.ldap.filter;
 
 import org.apache.commons.lang.Validate;
+import org.apache.commons.lang.builder.EqualsBuilder;
 
 /**
  * A filter for 'not'. The following code:
@@ -66,13 +67,17 @@ public class NotFilter extends AbstractFilter {
 	 * @see java.lang.Object#equals(java.lang.Object)
 	 */
 	public boolean equals(Object o) {
-
-		if (o instanceof NotFilter && o.getClass() == this.getClass()) {
-			NotFilter f = (NotFilter) o;
-			return this.filter.equals(f.filter);
+		if (o == null) {
+			return false;
 		}
-
-		return false;
+		if (o == this) {
+			return true;
+		}
+		if (o.getClass() != getClass()) {
+			return false;
+		}
+		NotFilter f = (NotFilter) o;
+		return new EqualsBuilder().append(this.filter, f.filter).isEquals();
 	}
 
 	/*

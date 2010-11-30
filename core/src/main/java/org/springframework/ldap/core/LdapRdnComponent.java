@@ -1,5 +1,5 @@
 /*
- * Copyright 2005-2008 the original author or authors.
+ * Copyright 2005-2010 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,6 +21,8 @@ import java.net.URISyntaxException;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.Validate;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * Represents part of an LdapRdn. As specified in RFC2253 an LdapRdn may be
@@ -32,6 +34,8 @@ import org.apache.commons.lang.Validate;
  */
 public class LdapRdnComponent implements Comparable, Serializable {
 	private static final long serialVersionUID = -3296747972616243038L;
+
+	private static final Log log = LogFactory.getLog(LdapRdnComponent.class);
 
 	public static final boolean DONT_DECODE_VALUE = false;
 
@@ -51,18 +55,37 @@ public class LdapRdnComponent implements Comparable, Serializable {
 
 	/**
 	 * Constructs an LdapRdnComponent, optionally decoding the value.
+	 * <p>
+	 * Depending on the value of the "key case fold" System property, the keys
+	 * will be lowercased, uppercased, or preserve their original case. Default
+	 * is to convert them to lowercase.
 	 * 
-	 * @param key the Atttribute name.
+	 * @param key the Attribute name.
 	 * @param value the Attribute value.
 	 * @param decodeValue if <code>true</code> the value is decoded (typically
 	 * used when a DN is parsed from a String), otherwise the value is used as
 	 * specified.
+	 * @see DistinguishedName#KEY_CASE_FOLD_PROPERTY
 	 */
 	public LdapRdnComponent(String key, String value, boolean decodeValue) {
 		Validate.notEmpty(key, "Key must not be empty");
 		Validate.notEmpty(value, "Value must not be empty");
 
-		this.key = StringUtils.lowerCase(key);
+		String caseFold = System.getProperty(DistinguishedName.KEY_CASE_FOLD_PROPERTY);
+		if (StringUtils.isBlank(caseFold) || caseFold.equals(DistinguishedName.KEY_CASE_FOLD_LOWER)) {
+			this.key = StringUtils.lowerCase(key);
+		} else if (caseFold.equals(DistinguishedName.KEY_CASE_FOLD_UPPER)) {
+			this.key = StringUtils.upperCase(key);
+		} else if (caseFold.equals(DistinguishedName.KEY_CASE_FOLD_NONE)) {
+			this.key = key;
+		} else {
+			log
+					.warn("\"" + caseFold + "\" invalid property value for " + DistinguishedName.KEY_CASE_FOLD_PROPERTY
+							+ "; expected \"" + DistinguishedName.KEY_CASE_FOLD_LOWER + "\", \""
+							+ DistinguishedName.KEY_CASE_FOLD_UPPER + "\", or \""
+							+ DistinguishedName.KEY_CASE_FOLD_NONE + "\"");
+			this.key = StringUtils.lowerCase(key);
+		}
 		if (decodeValue) {
 			this.value = LdapEncoder.nameDecode(value);
 		}

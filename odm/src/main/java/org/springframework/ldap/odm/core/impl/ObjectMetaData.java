@@ -69,6 +69,7 @@ import org.springframework.ldap.odm.annotations.Transient;
             } else {
                 objectClasses.add(new CaseIgnoreString(clazz.getSimpleName()));
             }
+            onlyTheseClasses=entity.onlyTheseClasses();
         } else {
             throw new MetaDataException(String.format("Class %1$s must have a class level %2$s annotation", clazz,
                     Entry.class));

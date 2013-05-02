@@ -27,11 +27,13 @@ import org.apache.commons.lang.builder.HashCodeBuilder;
  * @author Mattias Hellborg Arthursson
  * @author Ulrik Sandberg
  */
-public class PagedResult {
+public class PagedResult<T> {
 
-    private List resultList;
+    private List<T> resultList;
 
     private PagedResultsCookie cookie;
+
+	private int resultSize;
 
     /**
      * Constructs a PagedResults using the supplied List and
@@ -42,7 +44,7 @@ public class PagedResult {
      * @param cookie
      *            the cookie.
      */
-    public PagedResult(List resultList, PagedResultsCookie cookie) {
+    public PagedResult(List<T> resultList, PagedResultsCookie cookie) {
         this.resultList = resultList;
         this.cookie = cookie;
     }
@@ -61,7 +63,7 @@ public class PagedResult {
      * 
      * @return the result list.
      */
-    public List getResultList() {
+    public List<T> getResultList() {
         return resultList;
     }
 
@@ -72,7 +74,8 @@ public class PagedResult {
      */
     public boolean equals(Object obj) {
         if (obj != null && this.getClass().equals(obj.getClass())) {
-            PagedResult that = (PagedResult) obj;
+            @SuppressWarnings("unchecked")
+			PagedResult<T> that = (PagedResult<T>) obj;
             return new EqualsBuilder().append(this.resultList, that.resultList)
                     .append(this.cookie, that.cookie).isEquals();
         }
@@ -89,4 +92,12 @@ public class PagedResult {
         return new HashCodeBuilder().append(this.resultList)
                 .append(this.cookie).toHashCode();
     }
+
+	public int getResultSize() {
+		return resultSize;
+	}
+
+	public void setResultSize(int resultSize) {
+		this.resultSize = resultSize;
+	}
 }

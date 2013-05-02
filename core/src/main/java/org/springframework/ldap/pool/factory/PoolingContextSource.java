@@ -25,6 +25,7 @@ import org.apache.commons.pool.impl.GenericKeyedObjectPool;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.ldap.NamingException;
+import org.springframework.ldap.control.PagedResultsCookie;
 import org.springframework.ldap.core.ContextSource;
 import org.springframework.ldap.pool.DelegatingDirContext;
 import org.springframework.ldap.pool.DelegatingLdapContext;
@@ -420,6 +421,22 @@ public class PoolingContextSource implements ContextSource, DisposableBean {
 		final DirContext dirContext;
 		try {
 			dirContext = (DirContext) this.keyedObjectPool.borrowObject(dirContextType);
+		}
+		catch (Exception e) {
+			throw new DataAccessResourceFailureException("Failed to borrow DirContext from pool.", e);
+		}
+
+		if (dirContext instanceof LdapContext) {
+			return new DelegatingLdapContext(this.keyedObjectPool, (LdapContext) dirContext, dirContextType);
+		}
+
+		return new DelegatingDirContext(this.keyedObjectPool, dirContext, dirContextType);
+	}
+
+	protected DirContext getContext(PagedResultsCookie cookie, DirContextType dirContextType) {
+		final DirContext dirContext;
+		try {
+			dirContext = (DirContext) this.keyedObjectPool.borrowObject(cookie);
 		}
 		catch (Exception e) {
 			throw new DataAccessResourceFailureException("Failed to borrow DirContext from pool.", e);

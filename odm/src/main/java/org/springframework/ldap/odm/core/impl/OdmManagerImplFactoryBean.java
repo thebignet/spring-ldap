@@ -5,6 +5,7 @@ import java.util.Set;
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.FactoryBeanNotInitializedException;
 import org.springframework.ldap.core.ContextSource;
+import org.springframework.ldap.odm.core.OdmManager;
 import org.springframework.ldap.odm.typeconversion.ConverterManager;
 
 /**
@@ -26,7 +27,7 @@ import org.springframework.ldap.odm.typeconversion.ConverterManager;
  * 
  * @author Paul Harvey &lt;paul.at.pauls-place.me.uk>
  */
-public final class OdmManagerImplFactoryBean implements FactoryBean {
+public final class OdmManagerImplFactoryBean implements FactoryBean<OdmManager> {
     private ContextSource contextSource=null;
     private Set<Class<?>> managedClasses=null;
     private ConverterManager converterManager=null;
@@ -60,7 +61,7 @@ public final class OdmManagerImplFactoryBean implements FactoryBean {
     /* (non-Javadoc)
      * @see org.springframework.beans.factory.FactoryBean#getObject()
      */
-    public Object getObject() throws Exception {
+    public OdmManager getObject() throws Exception {
         if (contextSource==null) {        
             throw new FactoryBeanNotInitializedException("contextSource property has not been set");
         }

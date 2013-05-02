@@ -7,6 +7,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.FactoryBeanNotInitializedException;
+import org.springframework.ldap.odm.typeconversion.ConverterManager;
 
 /**
  * A utility class to allow {@link ConverterManagerImpl} instances to be easily configured via <code>spring.xml</code>.
@@ -74,7 +75,7 @@ import org.springframework.beans.factory.FactoryBeanNotInitializedException;
  * 
  * @author Paul Harvey &lt;paul.at.pauls-place.me.uk>
  */
-public final class ConverterManagerFactoryBean implements FactoryBean {
+public final class ConverterManagerFactoryBean implements FactoryBean<ConverterManager> {
     private static Log LOG = LogFactory.getLog(ConverterManagerFactoryBean.class);
 
     /** 
@@ -150,7 +151,7 @@ public final class ConverterManagerFactoryBean implements FactoryBean {
      * 
      * @see org.springframework.beans.factory.FactoryBean#getObject()
      */
-    public Object getObject() throws Exception {
+    public ConverterManager getObject() throws Exception {
         if (converterConfigList==null) {
             throw new FactoryBeanNotInitializedException("converterConfigList has not been set");
         }

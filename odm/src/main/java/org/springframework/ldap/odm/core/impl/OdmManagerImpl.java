@@ -16,11 +16,16 @@ import javax.naming.directory.Attribute;
 import javax.naming.directory.Attributes;
 import javax.naming.directory.SearchControls;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.ldap.control.PagedResult;
+import org.springframework.ldap.control.PagedResultsCookie;
+import org.springframework.ldap.control.PagedResultsDirContextProcessor;
 import org.springframework.ldap.core.ContextSource;
 import org.springframework.ldap.core.DirContextAdapter;
 import org.springframework.ldap.core.DirContextOperations;
+import org.springframework.ldap.core.DirContextProcessor;
 import org.springframework.ldap.core.DistinguishedName;
 import org.springframework.ldap.core.LdapOperations;
 import org.springframework.ldap.core.LdapTemplate;
@@ -221,36 +226,9 @@ public final class OdmManagerImpl implements OdmManager {
     /* (non-Javadoc)
      * @see org.springframework.ldap.odm.core.OdmManager#search(java.lang.Class, javax.naming.Name, java.lang.String, javax.naming.directory.SearchControls)
      */
-    public <T> List<T> search(Class<T> managedClass, Name base, String filter, SearchControls scope) {
-        EntityData entityData=getEntityData(managedClass);
-        
-        // Add a filter so we only read the object class we can deal with
-        String finalFilter = entityData.ocFilter;
-        if (filter != null && filter.length() != 0) {
-            StringBuilder fixedFilter = new StringBuilder();
-            fixedFilter.append("(&(").append(filter).append(")").append(entityData.ocFilter).append(")");
-            finalFilter = fixedFilter.toString();
-        }
-
-        // Search from the root if we are not told where to search from
-        Name localBase = base;
-        if (base == null || base.size() == 0) {
-            localBase = DistinguishedName.EMPTY_PATH;
-        }
-        
-        if (LOG.isDebugEnabled()) {
-            LOG.debug(String.format("Searching - base=%1$s, finalFilter=%2$s, scope=%3$s", base, finalFilter, scope));
-        }
-
-        @SuppressWarnings("unchecked")
-        List<T> result = ldapTemplate.search(localBase, finalFilter, scope, new GenericContextMapper<T>(managedClass));
-        result.remove(null);
-        
-        if (LOG.isDebugEnabled()) {
-            LOG.debug(String.format("Found %1$s Entries - %2$s", result.size(), result));
-        }
-        
-        return result;
+    @SuppressWarnings("unchecked")
+	public <T> List<T> search(Class<T> managedClass, Name base, String filter, SearchControls scope) {
+    	return search(managedClass, base, filter, scope,null).getResultList();
     }
 
    
@@ -443,9 +421,9 @@ public final class OdmManagerImpl implements OdmManager {
                         objectClassesFromJndi.add(new CaseIgnoreString((String)objectClassesFromJndiEnum.nextElement()));
                     }
                     // OK - checks its the same as the meta-data we have
-                    if (!objectClassesFromJndi.equals(metaData.getObjectClasses())) {
-                        // The items found has classes in addition to those searched for - so ditch it
-                        return null;
+                    if(!CollectionUtils.isSubCollection(metaData.getObjectClasses(),objectClassesFromJndi)){
+                    	LOG.warn("Object from LDAP does not contain required classes <"+objectClassesFromJndi.toArray()+">");
+                    	return null;
                     }
 
                 } else {
@@ -470,5 +448,47 @@ public final class OdmManagerImpl implements OdmManager {
             return result;
         }
     }
+
+	@SuppressWarnings("unchecked")
+	public <T> PagedResult<T> search(Class<T> managedClass, Name base, String filter, SearchControls scope,
+			DirContextProcessor processor) {
+        EntityData entityData=getEntityData(managedClass);
+        
+        // Add a filter so we only read the object class we can deal with
+        String finalFilter = entityData.ocFilter;
+        if (filter != null && filter.length() != 0) {
+            StringBuilder fixedFilter = new StringBuilder();
+            fixedFilter.append("(&(").append(filter).append(")").append(entityData.ocFilter).append(")");
+            finalFilter = fixedFilter.toString();
+        }
+
+        // Search from the root if we are not told where to search from
+        Name localBase = base;
+        if (base == null || base.size() == 0) {
+            localBase = DistinguishedName.EMPTY_PATH;
+        }
+        
+        if (LOG.isDebugEnabled()) {
+            LOG.debug(String.format("Searching - base=%1$s, finalFilter=%2$s, scope=%3$s", base, finalFilter, scope));
+        }
+
+        List<T> result = null;
+        if(processor!=null){
+        	result = ldapTemplate.search(localBase, finalFilter, scope, new GenericContextMapper<T>(managedClass),processor);
+        } else {
+        	result = ldapTemplate.search(localBase, finalFilter, scope, new GenericContextMapper<T>(managedClass));
+        }
+        result.remove(null);
+        PagedResultsCookie cookie = null;
+        if(processor instanceof PagedResultsDirContextProcessor){
+        	cookie = ((PagedResultsDirContextProcessor)processor).getCookie();
+        }
+        
+        if (LOG.isDebugEnabled()) {
+            LOG.debug(String.format("Found %1$s Entries - %2$s", result.size(), result));
+        }
+        
+        return new PagedResult<T>(result,cookie);
+	}
 
 }

@@ -5,6 +5,9 @@ import java.util.List;
 import javax.naming.Name;
 import javax.naming.directory.SearchControls;
 
+import org.springframework.ldap.control.PagedResult;
+import org.springframework.ldap.core.DirContextProcessor;
+
 /**
  * The OdmManager interface provides generic CRUD (create/read/update/delete) 
  * and searching operations against an LDAP directory.
@@ -94,4 +97,6 @@ public interface OdmManager {
      * @see <a href="http://www.rfc-editor.org/rfc/rfc4515.txt">LDAP: String Representation of Search Filters RFC.</a>
      */
     <T> List<T> search(Class<T> clazz, Name base, String filter, SearchControls searchControls);
+    <T> PagedResult<T> search(Class<T> managedClass, Name base, String filter, SearchControls scope,DirContextProcessor processor);
+    
 }

@@ -421,7 +421,13 @@ public final class OdmManagerImpl implements OdmManager {
                         objectClassesFromJndi.add(new CaseIgnoreString((String)objectClassesFromJndiEnum.nextElement()));
                     }
                     // OK - checks its the same as the meta-data we have
-                    if(!CollectionUtils.isSubCollection(metaData.getObjectClasses(),objectClassesFromJndi)){
+                    boolean classesMatch;
+                    if(metaData.isOnlyTheseClasses()){
+                    	classesMatch = objectClassesFromJndi.equals(metaData.getObjectClasses());
+                    } else {
+                    	classesMatch = CollectionUtils.isSubCollection(metaData.getObjectClasses(),objectClassesFromJndi);
+                    }
+                    if(!classesMatch){
                     	LOG.warn("Object from LDAP does not contain required classes <"+objectClassesFromJndi.toArray()+">");
                     	return null;
                     }

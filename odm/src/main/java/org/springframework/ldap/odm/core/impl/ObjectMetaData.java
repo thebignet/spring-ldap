@@ -27,6 +27,8 @@ import org.springframework.ldap.odm.annotations.Transient;
     private Map<Field, AttributeMetaData> fieldToAttribute = new HashMap<Field, AttributeMetaData>();
 
     private Set<CaseIgnoreString> objectClasses = new HashSet<CaseIgnoreString>();
+    
+    private boolean onlyTheseClasses = true;
 
     public Set<CaseIgnoreString> getObjectClasses() {
         return objectClasses;
@@ -121,4 +123,12 @@ import org.springframework.ldap.odm.annotations.Transient;
         return String.format("objectsClasses=%1$s | idField=%2$s | attributes=%3$s", 
                 objectClasses, idAttribute.getName(), fieldToAttribute);
     }
+
+	public boolean isOnlyTheseClasses() {
+		return onlyTheseClasses;
+	}
+
+	public void setOnlyTheseClasses(boolean onlyTheseClasses) {
+		this.onlyTheseClasses = onlyTheseClasses;
+	}
 }

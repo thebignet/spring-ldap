@@ -22,4 +22,5 @@ public @interface Entry {
      * @return A list of LDAP classes which the annotated Java class represents.
      */
     String[] objectClasses();
+    boolean onlyTheseClasses() default true;
 }
